@@ -20,3 +20,6 @@ dist/*
 
 # ignore ds store files
 .DS_Store
+
+# ignore baskeball.sqlite
+basketball.sqlite
