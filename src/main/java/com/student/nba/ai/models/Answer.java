@@ -1,4 +1,4 @@
-package com.example.restservice;
+package com.student.nba.ai.models;
 
 public class Answer {
 

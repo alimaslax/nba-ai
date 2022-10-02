@@ -23,3 +23,7 @@ dist/*
 
 # ignore baskeball.sqlite
 basketball.sqlite
+
+# ignore sqlite files
+*.sqlite
+sqlite3/
