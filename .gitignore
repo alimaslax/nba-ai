@@ -27,3 +27,6 @@ basketball.sqlite
 # ignore sqlite files
 *.sqlite
 sqlite3/
+
+# misc
+python_testing/.env
