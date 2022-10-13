@@ -1,0 +1,18 @@
+# Use root/example as user/password credentials
+version: "3.1"
+
+services:
+  db:
+    image: mysql
+    container_name: nba-ai
+    restart: always
+    environment:
+      MYSQL_DATABASE: main
+      MYSQL_ROOT_PASSWORD: ${password}
+    # ANY_PORT:3306
+    ports:
+      - 3306:3306
+    volumes:
+      - ./my.cnf:/etc/my.cnf
+# Connection URL
+# jdbc:mysql://localhost/

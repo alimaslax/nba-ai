@@ -1,276 +1,78 @@
 import os
 from dotenv import load_dotenv
 import openai
+import mysql.connector
+from flask import Flask, request, jsonify
 
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# response = openai.Completion.create(
-#     model="code-davinci-002",
-#     prompt='#Table Draft\n'+
-#            '#"Draft" (\n'+
-#            '#"yearDraft" REAL,\n'+
-#            '#"numberPickOverall" REAL,\n'+
-#            '#"numberRound" REAL,\n'+
-#            '#"numberRoundPick" REAL,\n'+
-#            '#"namePlayer" TEXT,\n'+
-#            '#"slugTeam" TEXT,\n'+
-#            '#"nameOrganizationFrom" TEXT,\n'+
-#            '#"typeOrganizationFrom" TEXT,\n'+
-#            '#"idPlayer" REAL,\n'+
-#            '#"idTeam" REAL,\n'+
-#            '#"nameTeam" TEXT,\n'+
-#            '#"cityTeam" TEXT,\n'+
-#            '#"teamName" TEXT,\n'+
-#            '#"PLAYER_PROFILE_FLAG" REAL,\n'+
-#            '#"slugOrganizationTypeFrom" TEXT,\n'+
-#            '#"locationOrganizationFrom" TEXT\n'+
-#            '#);\n'+
-#            '#Table Player\n'+
-#            '#"Player" (\n'+
-#            '#"id" TEXT,\n'+
-#            '#"full_name" TEXT,\n'+
-#            '#"first_name" TEXT,\n'+
-#            '#"last_name" TEXT,\n'+
-#            '#"is_active" INTEGER\n'+
-#            '#);\n'+
-#            '#"Player_Attributes" (\n'+
-#            '#"ID" TEXT,\n'+
-#            '#"FIRST_NAME" TEXT,\n'+
-#            '#"LAST_NAME" TEXT,\n'+
-#            '#"DISPLAY_FIRST_LAST" TEXT,\n'+
-#            '#"DISPLAY_LAST_COMMA_FIRST" TEXT,\n'+
-#            '#"DISPLAY_FI_LAST" TEXT,\n'+
-#            '#"PLAYER_SLUG" TEXT,\n'+
-#            '#"BIRTHDATE" TEXT,\n'+
-#            '#"SCHOOL" TEXT,\n'+
-#            '#"COUNTRY" TEXT,\n'+
-#            '#"LAST_AFFILIATION" TEXT,\n'+
-#            '#"HEIGHT" REAL,\n'+
-#            '#"WEIGHT" REAL,\n'+
-#            '#"SEASON_EXP" INTEGER,\n'+
-#            '#"JERSEY" TEXT,\n'+
-#            '#"POSITION" TEXT,\n'+
-#            '#"ROSTERSTATUS" TEXT,\n'+
-#            '#"GAMES_PLAYED_CURRENT_SEASON_FLAG" TEXT,\n'+
-#            '#"TEAM_ID" TEXT,\n'+
-#            '#"TEAM_NAME" TEXT,\n'+
-#            '#"TEAM_ABBREVIATION" TEXT,\n'+
-#            '#"TEAM_CODE" TEXT,\n'+
-#            '#"TEAM_CITY" TEXT,\n'+
-#            '#"PLAYERCODE" TEXT,\n'+
-#            '#"FROM_YEAR" TEXT,\n'+
-#            '#"TO_YEAR" TEXT,\n'+
-#            '#"DLEAGUE_FLAG" TEXT,\n'+
-#            '#"NBA_FLAG" TEXT,\n'+
-#            '#"GAMES_PLAYED_FLAG" TEXT,\n'+
-#            '#"DRAFT_YEAR" TEXT,\n'+
-#            '#"DRAFT_ROUND" TEXT,\n'+
-#            '#"DRAFT_NUMBER" TEXT,\n'+
-#            '#"PTS" REAL,\n'+
-#            '#"AST" REAL,\n'+
-#            '#"REB" REAL,\n'+
-#            '#"ALL_STAR_APPEARANCES" REAL,\n'+
-#            '#"PIE" REAL\n'+
-#            '#);\n'+
-#            '#Table Game\n'+
-#            'add a # for each line below\n'+
-#            '#"Game" (\n'+
-#            '#"GAME_ID" TEXT,\n'+
-#            '#"SEASON_ID" TEXT,\n'+
-#            '#"TEAM_ID_HOME" TEXT,\n'+
-#            '#"TEAM_ABBREVIATION_HOME" TEXT,\n'+
-#            '#"TEAM_NAME_HOME" TEXT,\n'+
-#            '#"GAME_DATE" TEXT,\n'+
-#            '#"MATCHUP_HOME" TEXT,\n'+
-#            '#"WL_HOME" TEXT,\n'+
-#            '#"MIN_HOME" INTEGER,\n'+
-#            '#"FGM_HOME" REAL,\n'+
-#            '#"FGA_HOME" TEXT,\n'+
-#            '#"FG_PCT_HOME" REAL,\n'+
-#            '#"FG3M_HOME" TEXT,\n'+
-#            '#"FG3A_HOME" TEXT,\n'+
-#            '#"FG3_PCT_HOME" REAL,\n'+
-#            '#"FTM_HOME" REAL,\n'+
-#            '#"FTA_HOME" REAL,\n'+
-#            '#"FT_PCT_HOME" REAL,\n'+
-#            '#"OREB_HOME" TEXT,\n'+
-#            '#"DREB_HOME" TEXT,\n'+
-#            '#"REB_HOME" TEXT,\n'+
-#            '#"AST_HOME" TEXT,\n'+
-#            '#"STL_HOME" TEXT,\n'+
-#            '#"BLK_HOME" TEXT,\n'+
-#            '#"TOV_HOME" TEXT,\n'+
-#            '#"PF_HOME" REAL,\n'+
-#            '#"PTS_HOME" INTEGER,\n'+
-#            '#"PLUS_MINUS_HOME" INTEGER,\n'+
-#            '#"VIDEO_AVAILABLE_HOME" INTEGER,\n'+
-#            '#"TEAM_ID_AWAY" TEXT,\n'+
-#            '#"TEAM_ABBREVIATION_AWAY" TEXT,\n'+
-#            '#"TEAM_NAME_AWAY" TEXT,\n'+
-#            '#"MATCHUP_AWAY" TEXT,\n'+
-#            '#"WL_AWAY" TEXT,\n'+
-#            '#"MIN_AWAY" INTEGER,\n'+
-#            '#"FGM_AWAY" REAL,\n'+
-#            '#"FGA_AWAY" TEXT,\n'+
-#            '#"FG_PCT_AWAY" REAL,\n'+
-#            '#"FG3M_AWAY" TEXT,\n'+
-#            '#"FG3A_AWAY" TEXT,\n'+
-#            '#"FG3_PCT_AWAY" REAL,\n'+
-#            '#"FTM_AWAY" REAL,\n'+
-#            '#"FTA_AWAY" REAL,\n'+
-#            '#"FT_PCT_AWAY" REAL,\n'+
-#            '#"OREB_AWAY" TEXT,\n'+
-#            '#"DREB_AWAY" TEXT,\n'+
-#            '#"REB_AWAY" TEXT,\n'+
-#            '#"AST_AWAY" TEXT,\n'+
-#            '#"STL_AWAY" TEXT,\n'+
-#            '#"BLK_AWAY" TEXT,\n'+
-#            '#"TOV_AWAY" TEXT,\n'+
-#            '#"PF_AWAY" REAL,\n'+
-#            '#"PTS_AWAY" INTEGER,\n'+
-#            '#"PLUS_MINUS_AWAY" INTEGER,\n'+
-#            '#"VIDEO_AVAILABLE_AWAY" INTEGER,\n'+
-#            '#"GAME_DATE_EST" TEXT,\n'+
-#            '#"GAME_SEQUENCE" TEXT,\n'+
-#            '#"GAME_STATUS_ID" TEXT,\n'+
-#            '#"GAME_STATUS_TEXT" TEXT,\n'+
-#            '#"GAMECODE" TEXT,\n'+
-#            '#"HOME_TEAM_ID" TEXT,\n'+
-#            '#"VISITOR_TEAM_ID" TEXT,\n'+
-#            '#"SEASON" TEXT,\n'+
-#            '#"LIVE_PERIOD" REAL,\n'+
-#            '#"LIVE_PC_TIME" TEXT,\n'+
-#            '#"NATL_TV_BROADCASTER_ABBREVIATION" TEXT,\n'+
-#            '#"LIVE_PERIOD_TIME_BCAST" TEXT,\n'+
-#            '#"WH_STATUS" REAL,\n'+
-#            '#"TEAM_CITY_HOME" TEXT,\n'+
-#            '#"PTS_PAINT_HOME" TEXT,\n'+
-#            '#"PTS_2ND_CHANCE_HOME" TEXT,\n'+
-#            '#"PTS_FB_HOME" TEXT,\n'+
-#            '#"LARGEST_LEAD_HOME" TEXT,\n'+
-#            '#"LEAD_CHANGES_HOME" TEXT,\n'+
-#            '#"TIMES_TIED_HOME" TEXT,\n'+
-#            '#"TEAM_TURNOVERS_HOME" TEXT,\n'+
-#            '#"TOTAL_TURNOVERS_HOME" TEXT,\n'+
-#            '#"TEAM_REBOUNDS_HOME" TEXT,\n'+
-#            '#"PTS_OFF_TO_HOME" TEXT,\n'+
-#            '#"TEAM_CITY_AWAY" TEXT,\n'+
-#            '#"PTS_PAINT_AWAY" TEXT,\n'+
-#            '#"PTS_2ND_CHANCE_AWAY" TEXT,\n'+
-#            '#"PTS_FB_AWAY" TEXT,\n'+
-#            '#"LARGEST_LEAD_AWAY" TEXT,\n'+
-#            '#"LEAD_CHANGES_AWAY" TEXT,\n'+
-#            '#"TIMES_TIED_AWAY" TEXT,\n'+
-#            '#"TEAM_TURNOVERS_AWAY" TEXT,\n'+
-#            '#"TOTAL_TURNOVERS_AWAY" TEXT,\n'+
-#            '#"TEAM_REBOUNDS_AWAY" TEXT,\n'+
-#            '#"PTS_OFF_TO_AWAY" TEXT,\n'+
-#            '#"LEAGUE_ID" TEXT,\n'+
-#            '#"GAME_DATE_DAY" TEXT,\n'+
-#            '#"ATTENDANCE" TEXT,\n'+
-#            '#"GAME_TIME" TEXT,\n'+
-#            '#"TEAM_CITY_NAME_HOME" TEXT,\n'+
-#            '#"TEAM_NICKNAME_HOME" TEXT,\n'+
-#            '#"TEAM_WINS_LOSSES_HOME" TEXT,\n'+
-#            '#"PTS_QTR1_HOME" TEXT,\n'+
-#            '#"PTS_QTR2_HOME" TEXT,\n'+
-#            '#"PTS_QTR3_HOME" TEXT,\n'+
-#            '#"PTS_QTR4_HOME" TEXT,\n'+
-#            '#"PTS_OT1_HOME" TEXT,\n'+
-#            '#"PTS_OT2_HOME" TEXT,\n'+
-#            '#"PTS_OT3_HOME" TEXT,\n'+
-#            '#"PTS_OT4_HOME" TEXT,\n'+
-#            '#"PTS_OT5_HOME" TEXT,\n'+
-#            '#"PTS_OT6_HOME" TEXT,\n'+
-#            '#"PTS_OT7_HOME" TEXT,\n'+
-#            '#"PTS_OT8_HOME" TEXT,\n'+
-#            '#"PTS_OT9_HOME" TEXT,\n'+
-#            '#"PTS_OT10_HOME" TEXT,\n'+
-#            '#"PTS_HOME_y" REAL,\n'+
-#            '#"TEAM_CITY_NAME_AWAY" TEXT,\n'+
-#            '#"TEAM_NICKNAME_AWAY" TEXT,\n'+
-#            '#"TEAM_WINS_LOSSES_AWAY" TEXT,\n'+
-#            '#"PTS_QTR1_AWAY" TEXT,\n'+
-#            '#"PTS_QTR2_AWAY" TEXT,\n'+
-#            '#"PTS_QTR3_AWAY" TEXT,\n'+
-#            '#"PTS_QTR4_AWAY" TEXT,\n'+
-#            '#"PTS_OT1_AWAY" TEXT,\n'+
-#            '#"PTS_OT2_AWAY" TEXT,\n'+
-#            '#"PTS_OT3_AWAY" TEXT,\n'+
-#            '#"PTS_OT4_AWAY" TEXT,\n'+
-#            '#"PTS_OT5_AWAY" TEXT,\n'+
-#            '#"PTS_OT6_AWAY" TEXT,\n'+
-#            '#"PTS_OT7_AWAY" TEXT,\n'+
-#            '#"PTS_OT8_AWAY" TEXT,\n'+
-#            '#"PTS_OT9_AWAY" TEXT,\n'+
-#            '#"PTS_OT10_AWAY" TEXT,\n'+
-#            '#"LAST_GAME_ID" TEXT,\n'+
-#            '#"LAST_GAME_DATE_EST" TEXT,\n'+
-#            '#"LAST_GAME_HOME_TEAM_ID" TEXT,\n'+
-#            '#"LAST_GAME_HOME_TEAM_CITY" TEXT,\n'+
-#            '#"LAST_GAME_HOME_TEAM_NAME" TEXT,\n'+
-#            '#"LAST_GAME_HOME_TEAM_ABBREVIATION" TEXT,\n'+
-#            '#"LAST_GAME_HOME_TEAM_POINTS" TEXT,\n'+
-#            '#"LAST_GAME_VISITOR_TEAM_ID" TEXT,\n'+
-#            '#"LAST_GAME_VISITOR_TEAM_CITY" TEXT,\n'+
-#            '#"LAST_GAME_VISITOR_TEAM_NAME" TEXT,\n'+
-#            '#"LAST_GAME_VISITOR_TEAM_CITY1" TEXT,\n'+
-#            '#"LAST_GAME_VISITOR_TEAM_POINTS" TEXT,\n'+
-#            '#"HOME_TEAM_WINS" REAL,\n'+
-#            '#"HOME_TEAM_LOSSES" REAL,\n'+
-#            '#"SERIES_LEADER" TEXT,\n'+
-#            '#"VIDEO_AVAILABLE_FLAG" REAL,\n'+
-#            '#"PT_AVAILABLE" REAL,\n'+
-#            '#"PT_XYZ_AVAILABLE" REAL,\n'+
-#            '#"HUSTLE_STATUS" REAL,\n'+
-#            '#"HISTORICAL_STATUS" REAL\n'+
-#            '#);\n'+
-#            '#Table Team\n'+
-#            '#"Team" (\n'+
-#            '#"id" TEXT,\n'+
-#            '#"full_name" TEXT,\n'+
-#            '#"abbreviation" TEXT,\n'+
-#            '#"nickname" TEXT,\n'+
-#            '#"city" TEXT,\n'+
-#            '#"state" TEXT,\n'+
-#            '#"year_founded" INTEGER\n'+
-#            '#);\n'+
-#            '#Table Team_Attributes\n'+
-#            '#"Team_Attributes" (\n'+
-#            '#"ID" TEXT,\n'+
-#            '#"ABBREVIATION" TEXT,\n'+
-#            '#"NICKNAME" TEXT,\n'+
-#            '#"YEARFOUNDED" TEXT,\n'+
-#            '#"CITY" TEXT,\n'+
-#            '#"ARENA" TEXT,\n'+
-#            '#"ARENACAPACITY" REAL,\n'+
-#            '#"OWNER" TEXT,\n'+
-#            '#"GENERALMANAGER" TEXT,\n'+
-#            '#"HEADCOACH" TEXT,\n'+
-#            '#"DLEAGUEAFFILIATION" TEXT,\n'+
-#            '#"FACEBOOK_WEBSITE_LINK" TEXT,\n'+
-#            '#"INSTAGRAM_WEBSITE_LINK" TEXT,\n'+
-#            '#"TWITTER_WEBSITE_LINK" TEXT\n'+
-#            '#);\n'+
-#            '##\n'+
-#            'a sql query to find when J.R Smith birthday is',
-#     temperature=0,
-#     max_tokens=150,
-#     top_p=1.0,
-#     frequency_penalty=0.0,
-#     presence_penalty=0.0,
-#     stop=["##"]
-# )
-response = openai.Completion.create(
-    model="curie:ft-student-2022-10-05-13-00-49",
-    prompt="A query to list of all players who are under 6 feet tall",
-    temperature=0,
-    max_tokens=150,
-    top_p=1.0,
-    frequency_penalty=0.0,
-    presence_penalty=0.0
-)
+prefix = '''### Postgres SQL tables, with their properties:
+# Draft(yearDraft, numberPickOverall, numberRound, numberRoundPick, namePlayer, slugTeam, nameOrganizationFrom, typeOrganizationFrom, idPlayer, idTeam, nameTeam, cityTeam, teamName, PLAYER_PROFILE_FLAG, slugOrganizationTypeFrom, locationOrganizationFrom)
+# Player(id, full_name, first_name, last_name, is_active)
+# Player_Attributes(ID, FIRST_NAME, LAST_NAME, DISPLAY_FIRST_LAST, DISPLAY_LAST_COMMA_FIRST, DISPLAY_FI_LAST, PLAYER_SLUG, BIRTHDATE, SCHOOL, COUNTRY, LAST_AFFILIATION, HEIGHT, WEIGHT, SEASON_EXP, JERSEY, POSITION, ROSTERSTATUS, GAMES_PLAYED_CURRENT_SEASON_FLAG, TEAM_ID, TEAM_NAME, TEAM_ABBREVIATION, TEAM_CODE, TEAM_CITY, PLAYERCODE, FROM_YEAR, TO_YEAR, DLEAGUE_FLAG, NBA_FLAG, GAMES_PLAYED_FLAG, DRAFT_YEAR, DRAFT_ROUND, DRAFT_NUMBER, PTS, AST, REB, ALL_STAR_APPEARANCES, PIE)
+# Game(GAME_ID, SEASON_ID, TEAM_ID_HOME, TEAM_ABBREVIATION_HOME, TEAM_NAME_HOME, GAME_DATE, MATCHUP_HOME, WL_HOME, MIN_HOME, FGM_HOME, FGA_HOME, FG_PCT_HOME, FG3M_HOME, FG3A_HOME, FG3_PCT_HOME, FTM_HOME, FTA_HOME, FT_PCT_HOME, OREB_HOME, DREB_HOME, REB_HOME, AST_HOME, STL_HOME, BLK_HOME, TOV_HOME, PF_HOME, PTS_HOME, PLUS_MINUS_HOME, VIDEO_AVAILABLE_HOME, TEAM_ID_AWAY, TEAM_ABBREVIATION_AWAY, TEAM_NAME_AWAY, MATCHUP_AWAY, WL_AWAY, MIN_AWAY, FGM_AWAY, FGA_AWAY, FG_PCT_AWAY, FG3M_AWAY, FG3A_AWAY, FG3_PCT_AWAY, FTM_AWAY, FTA_AWAY, FT_PCT_AWAY, OREB_AWAY, DREB_AWAY, REB_AWAY, AST_AWAY, STL_AWAY, BLK_AWAY, TOV_AWAY, PF_AWAY, PTS_AWAY, PLUS_MINUS_AWAY, VIDEO_AVAILABLE_AWAY, GAME_DATE_EST, GAME_SEQUENCE, GAME_STATUS_ID, GAME_STATUS_, GAMECODE, HOME_TEAM_ID, VISITOR_TEAM_ID, SEASON, LIVE_PERIOD, LIVE_PC_TIME, NATL_TV_BROADCASTER_ABBREVIATION, LIVE_PERIOD_TIME_BCAST, WH_STATUS, TEAM_CITY_HOME, PTS_PAINT_HOME, PTS_2ND_CHANCE_HOME, PTS_FB_HOME, LARGEST_LEAD_HOME, LEAD_CHANGES_HOME, TIMES_TIED_HOME, TEAM_TURNOVERS_HOME, TOTAL_TURNOVERS_HOME, TEAM_REBOUNDS_HOME, PTS_OFF_TO_HOME, TEAM_CITY_AWAY, PTS_PAINT_AWAY, PTS_2ND_CHANCE_AWAY, PTS_FB_AWAY, LARGEST_LEAD_AWAY, LEAD_CHANGES_AWAY, TIMES_TIED_AWAY, TEAM_TURNOVERS_AWAY, TOTAL_TURNOVERS_AWAY, TEAM_REBOUNDS_AWAY, PTS_OFF_TO_AWAY, LEAGUE_ID, GAME_DATE_DAY, ATTENDANCE, GAME_TIME, TEAM_CITY_NAME_HOME, TEAM_NICKNAME_HOME, TEAM_WINS_LOSSES_HOME, PTS_QTR1_HOME, PTS_QTR2_HOME, PTS_QTR3_HOME, PTS_QTR4_HOME, PTS_OT1_HOME, PTS_OT2_HOME, PTS_OT3_HOME, PTS_OT4_HOME, PTS_OT5_HOME, PTS_OT6_HOME, PTS_OT7_HOME, PTS_OT8_HOME, PTS_OT9_HOME, PTS_OT10_HOME, PTS_HOME_y, TEAM_CITY_NAME_AWAY, TEAM_NICKNAME_AWAY, TEAM_WINS_LOSSES_AWAY, PTS_QTR1_AWAY, PTS_QTR2_AWAY, PTS_QTR3_AWAY, PTS_QTR4_AWAY, PTS_OT1_AWAY, PTS_OT2_AWAY, PTS_OT3_AWAY, PTS_OT4_AWAY, PTS_OT5_AWAY, PTS_OT6_AWAY, PTS_OT7_AWAY, PTS_OT8_AWAY, PTS_OT9_AWAY, PTS_OT10_AWAY, LAST_GAME_ID, LAST_GAME_DATE_EST, LAST_GAME_HOME_TEAM_ID, LAST_GAME_HOME_TEAM_CITY, LAST_GAME_HOME_TEAM_NAME, LAST_GAME_HOME_TEAM_ABBREVIATION, LAST_GAME_HOME_TEAM_POINTS, LAST_GAME_VISITOR_TEAM_ID, LAST_GAME_VISITOR_TEAM_CITY, LAST_GAME_VISITOR_TEAM_NAME, LAST_GAME_VISITOR_TEAM_CITY1, LAST_GAME_VISITOR_TEAM_POINTS, HOME_TEAM_WINS, HOME_TEAM_LOSSES, SERIES_LEADER, VIDEO_AVAILABLE_FLAG, PT_AVAILABLE, PT_XYZ_AVAILABLE, HUSTLE_STATUS, HISTORICAL_STATUS)
+# Team(id, full_name, abbreviation, nickname, city, state, year_founded)
+# Team_Attributes(ID, ABBREVIATION, NICKNAME, YEARFOUNDED, CITY, ARENA, ARENACAPACITY, OWNER, GENERALMANAGER, HEADCOACH, DLEAGUEAFFILIATION, FACEBOOK_WEBSITE_LINK, INSTAGRAM_WEBSITE_LINK, TWITTER_WEBSITE_LINK)
+### A sql query to find 
+'''
 
-print(response)
+# write a function that takes in a string and calls
+# openai Completion API
+def openai_completion(prompt):
+    response = openai.Completion.create(
+        model="code-davinci-002",
+        prompt=prefix+prompt+"\n SELECT",
+        temperature=0,
+        max_tokens=150,
+        top_p=1.0,
+        frequency_penalty=0.0,
+        presence_penalty=0.0,
+        stop=["#", ";"]
+    )
+    # jsonify the response first choice text
+    fix_prompt = jsonify(response['choices'][0]['text'])
+    # fix = openai.Completion.create(
+    #     model="code-davinci-002",
+    #     prompt="# fix this sql query #"+response.choices[0].text,
+    #     temperature=0,
+    #     max_tokens=150,
+    #     top_p=1.0,
+    #     frequency_penalty=0.0,
+    #     presence_penalty=0.0,
+    #     stop=["#", ";"]
+    # )
+    return response
+
+
+# Connect to MySQL database named main running on localhost with user root and password lewenberg
+db = mysql.connector.connect(host="localhost", user="root", passwd="lewenberg", database="main")
+
+# create whatever objects is needed to run a sql query
+cursor = db.cursor()
+
+def execute_sql(sql):
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    db.close()
+    return result
+
+# flask example that is listening on port 5000 has a query param route
+# named nba-ai that calls the execute_sql function with the given query param
+# and returns the result as a json object
+app = Flask(__name__)
+@app.route('/nba-ai')
+def hello_world():
+    query = request.args.get('query')
+    response = openai_completion(query)
+    # print the response from openai
+    print(response)
+    # return the first choice
+    query = response['choices'][0]['text'];
+    full_query = "SELECT"+query.split("\n")[0]
+    return execute_sql(full_query)
+
+# run the flask app
+if __name__ == '__main__':
+    app.run(port=5000)
