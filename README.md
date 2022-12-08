@@ -49,7 +49,7 @@ Make a back up the database
 cat backup.sql | nerdctl exec -i CONTAINER /usr/bin/mysql -u root --password=$SQLPASS DATABASE
 ```
 
-restore a backup to the database
+restore a backup to the databasels
 
 Readings
 https://dev.mysql.com/doc/refman/8.0/en/identifier-case-sensitivity.html

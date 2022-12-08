@@ -8,7 +8,7 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-prefix = '''### Postgres SQL tables, with their properties:
+prefix = '''### MySql SQL tables, with their properties:
 # Draft(yearDraft, numberPickOverall, numberRound, numberRoundPick, namePlayer, slugTeam, nameOrganizationFrom, typeOrganizationFrom, idPlayer, idTeam, nameTeam, cityTeam, teamName, PLAYER_PROFILE_FLAG, slugOrganizationTypeFrom, locationOrganizationFrom)
 # Player(id, full_name, first_name, last_name, is_active)
 # Player_Attributes(ID, FIRST_NAME, LAST_NAME, DISPLAY_FIRST_LAST, DISPLAY_LAST_COMMA_FIRST, DISPLAY_FI_LAST, PLAYER_SLUG, BIRTHDATE, SCHOOL, COUNTRY, LAST_AFFILIATION, HEIGHT, WEIGHT, SEASON_EXP, JERSEY, POSITION, ROSTERSTATUS, GAMES_PLAYED_CURRENT_SEASON_FLAG, TEAM_ID, TEAM_NAME, TEAM_ABBREVIATION, TEAM_CODE, TEAM_CITY, PLAYERCODE, FROM_YEAR, TO_YEAR, DLEAGUE_FLAG, NBA_FLAG, GAMES_PLAYED_FLAG, DRAFT_YEAR, DRAFT_ROUND, DRAFT_NUMBER, PTS, AST, REB, ALL_STAR_APPEARANCES, PIE)
@@ -55,8 +55,25 @@ cursor = db.cursor()
 def execute_sql(sql):
     cursor.execute(sql)
     result = cursor.fetchall()
-    db.close()
-    return result
+    return pp(cursor,result)
+
+# a function that pretty prints cursor
+def pp(cursor, data=None, rowlens=0):
+    d = cursor.description
+    if not d:
+        return "#### NO RESULTS ###"
+    names = []
+    lengths = []
+    if not data:
+        data = cursor.fetchall(  )
+    for dd in d:    # iterate over description
+        l = dd[1]
+        if not l:
+            l = 12             # or default arg ...
+        l = max(l, len(dd[0])) # Handle long names
+        names.append(dd[0])
+        lengths.append(l)
+    return [names]+data
 
 # flask example that is listening on port 5000 has a query param route
 # named nba-ai that calls the execute_sql function with the given query param
@@ -71,7 +88,7 @@ def hello_world():
     # return the first choice
     query = response['choices'][0]['text'];
     full_query = "SELECT"+query.split("\n")[0]
-    return execute_sql(full_query)
+    return jsonify(execute_sql(full_query))
 
 # run the flask app
 if __name__ == '__main__':
